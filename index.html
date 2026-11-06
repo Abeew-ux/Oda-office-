@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>ODA SHOP - Gestion des produits</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--y:#F5B800;--y2:#FFD84D}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#0d0d0d;color:#f2f2f2;max-width:520px;margin:0 auto;padding:0 12px 90px;min-height:100vh}
+header{position:sticky;top:0;z-index:10;background:#0d0d0d;padding:12px 0 8px;border-bottom:1px solid #2a2a2a}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:16px;font-weight:800;color:var(--y2)}
+.who{font-size:11px;color:#9a9a9a}
+.lg{background:none;border:1px solid #444;color:#ddd;border-radius:14px;padding:5px 10px;font-size:11px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:7px 12px;border-radius:18px;border:1px solid #3a3a3a;background:#161616;color:#ccc;font-size:12px;font-weight:600}
+.tab.on{background:linear-gradient(180deg,var(--y2),var(--y));color:#111;border-color:var(--y);font-weight:800}
+.srch{width:100%;margin-top:8px;height:38px;border-radius:12px;border:1px solid #333;background:#161616;color:#fff;padding:0 12px;font-size:14px}
+.it{display:flex;gap:10px;background:#161616;border:1px solid #262626;border-radius:14px;padding:10px;margin-top:10px}
+.it img,.noimg{width:62px;height:62px;border-radius:10px;object-fit:cover;flex:none;background:#222;display:flex;align-items:center;justify-content:center;font-size:26px}
+.in{flex:1;min-width:0}
+.in b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.in .pr{color:var(--y2);font-weight:800;font-size:13px;margin-top:2px}
+.in small{display:block;color:#8d8d8d;font-size:10.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.act{display:flex;gap:6px;margin-top:7px}
+.act button{border-radius:9px;padding:5px 9px;font-size:11px;font-weight:700;background:none}
+.b-st{border:1px solid #6a5a1a;color:var(--y2)}
+.b-del{border:1px solid #8a2a2a;color:#ff6b6b}
+.ep{opacity:.55}.tag{display:inline-block;background:#3a1f1f;color:#ff8a8a;border-radius:6px;font-size:9px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.empty{text-align:center;color:#777;padding:40px 10px;font-size:13px}
+.fab{position:fixed;right:max(14px,calc(50vw - 246px));bottom:18px;z-index:20;background:linear-gradient(180deg,var(--y2),var(--y));color:#111;border:0;border-radius:28px;padding:14px 20px;font-weight:800;font-size:14px;box-shadow:0 8px 22px rgba(245,184,0,.4)}
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.box{background:#161616;border-top:2px solid var(--y);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;overflow:auto;padding:16px 16px 22px}
+.box h2{font-size:15px;color:var(--y2);margin-bottom:8px}
+label{display:block;font-size:11.5px;color:#aaa;margin:10px 0 4px}
+input,select,textarea{width:100%;background:#0d0d0d;color:#fff;border:1px solid #333;border-radius:10px;padding:10px;font-size:14px;font-family:inherit}
+textarea{min-height:60px;resize:vertical}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.btns{display:flex;gap:8px;margin-top:16px}
+.btns button{flex:1;padding:12px;border-radius:12px;border:0;font-weight:800;font-size:14px}
+.ok{background:linear-gradient(180deg,var(--y2),var(--y));color:#111}
+.no{background:#2a2a2a;color:#ddd}
+.ph{display:flex;align-items:center;gap:10px;margin-top:4px}
+.ph img{width:70px;height:70px;border-radius:10px;object-fit:cover;background:#222}
+.ph label{margin:0;flex:1;text-align:center;border:1.5px dashed #555;border-radius:12px;padding:14px 8px;color:#ddd;font-size:12px}
+.msg{font-size:12px;color:#ff8a8a;margin-top:10px;min-height:16px}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#222;border:1px solid #444;border-radius:14px;padding:10px 16px;font-size:13px;opacity:0;transition:opacity .25s;z-index:99;pointer-events:none;max-width:90%}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><div><h1>ODA SHOP · Gestion produits</h1><div class="who" id="who">Chargement...</div></div><button class="lg" id="lg" type="button">Se connecter</button></div>
+  <div class="tabs" id="tabs"></div>
+  <input class="srch" id="q" type="search" placeholder="Rechercher un produit..." autocomplete="off">
+</header>
+<main id="liste"></main>
+<button class="fab" id="add" type="button">+ Ajouter</button>
+
+<!-- Formulaire produit -->
+<div class="sheet" id="fs" hidden><div class="box">
+  <h2 id="ft">Ajouter un produit</h2>
+  <label>Où l'afficher ?</label>
+  <select id="fsec"></select>
+  <label>Nom du produit *</label><input id="fnom" placeholder="Ex : Bouilloire électrique 1.7L">
+  <div class="row"><div><label>Prix de vente (FCFA) *</label><input id="fvente" type="number" inputmode="numeric" placeholder="18000"></div>
+  <div><label>Prix d'achat (facultatif)</label><input id="fachat" type="number" inputmode="numeric" placeholder="12000"></div></div>
+  <label>Description (facultatif)</label><textarea id="fdesc" placeholder="Ex : Neuf, garantie 1 an"></textarea>
+  <label id="fvl">Vendeur</label><input id="fven" placeholder="Nom du vendeur">
+  <label>Téléphone du vendeur (facultatif)</label><input id="ftel" type="tel" placeholder="90 00 00 00">
+  <label>Photo</label>
+  <div class="ph" id="phbox"><img id="pv" alt="" hidden><label for="ffile">📷 Prendre / choisir une photo</label></div>
+  <input type="file" id="ffile" accept="image/*" hidden>
+  <label id="fvidl">Lien de la vidéo (Immobilier)</label><input id="fvid" placeholder="https://...mp4">
+  <label id="furll">Lien de la photo (Cloudflare)</label><input id="furl" placeholder="https://...">
+  <div class="msg" id="fmsg"></div>
+  <div class="btns"><button class="no" id="fno" type="button">Annuler</button><button class="ok" id="fok" type="button">Enregistrer</button></div>
+</div></div>
+
+<!-- Connexion -->
+<div class="sheet" id="ls" hidden><div class="box">
+  <h2>Connexion administrateur</h2>
+  <label>E-mail</label><input id="lmail" type="email" autocomplete="username">
+  <label>Mot de passe</label><input id="lpass" type="password" autocomplete="current-password">
+  <div class="msg" id="lmsg"></div>
+  <div class="btns"><button class="no" id="lno" type="button">Fermer</button><button class="ok" id="lok" type="button">Se connecter</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Connexion à Supabase (clé publique : elle peut être dans la page, ce n'est pas un secret) =====
+const URL_='https://bjapfgvqkuoaqsjtzqbz.supabase.co';
+const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqYXBmZ3Zxa3VvYXFzanR6cWJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2MTU0NjUsImV4cCI6MjEwODE5MTQ2NX0.u4c3TFvk46nXXn4fQf2sUG-ZejAQHefXH1UmQ38ZJTI';
+// Les photos sont stockées sur Cloudflare (pas sur Supabase).
+// CF_UPLOAD_URL : adresse du petit service d'envoi Cloudflare (Worker/R2) qui reçoit l'image (POST) et répond {"url":"https://..."}.
+// Tant qu'elle est vide, on colle simplement le lien de la photo déjà hébergée sur Cloudflare.
+const CF_UPLOAD_URL='https://oda-photos.ibrahhalidzakarie3.workers.dev';
+// section = valeur enregistrée dans la table products (les 2 premières sont celles de l'ancienne application)
+const SECTIONS=[
+ {k:'boutique',   t:'Produits neufs',      pre:'AGZ-B',v:'Vendeur',e:'🛍️'},
+ {k:'marketplace',t:"Produits d'occasion", pre:'AGZ-M',v:'Vendeur',e:'♻️'},
+ {k:'vivrier',    t:'Produits vivriers',   pre:'AGZ-V',v:'Fournisseur',e:'🌾'},
+ {k:'immobilier', t:'Immobilier (vidéos)',  pre:'AGZ-I',v:'Propriétaire / agent',e:'🏢'}];
+const $=id=>document.getElementById(id);
+let tok=null,mail='',tab=SECTIONS[0].k,items=[],ready=false;
+try{const s=JSON.parse(localStorage.getItem('oda_admin')||'null');if(s&&s.exp>Date.now()){tok=s.tok;mail=s.mail}}catch(e){}
+const H=(extra)=>Object.assign({apikey:ANON,Authorization:'Bearer '+(tok||ANON)},extra||{});
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>Number(n||0).toLocaleString('fr-FR').replace(/ | /g,' ')+' FCFA';
+function toast(m,ms){const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.opacity=0,ms||2200)}
+async function api(path,opt){
+  const r=await fetch(URL_+path,opt);
+  if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(e){}
+    if(r.status===401||r.status===403)throw new Error("Accès refusé : connecte-toi en administrateur ("+r.status+")");
+    if(m&&/row-level security/i.test(m))throw new Error("Accès refusé : connecte-toi en administrateur");
+    throw new Error(m||('Erreur '+r.status))}
+  return r.status===204?null:r.json().catch(()=>null);
+}
+function head(){$('who').textContent=tok?('Connecté : '+mail):'Non connecté (lecture seule possible)';$('lg').textContent=tok?'Déconnexion':'Se connecter'}
+
+// ===== Liste =====
+async function charger(){
+  try{
+    items=await api('/rest/v1/products?select=*&order=created_at.desc&limit=1000',{headers:H()});
+    ready=true;
+  }catch(e){items=[];$('liste').innerHTML='<div class="empty">⚠️ '+esc(e.message)+'</div>';return}
+  afficher();
+}
+function afficher(){
+  $('tabs').innerHTML=SECTIONS.map(s=>`<button class="tab${s.k===tab?' on':''}" data-t="${s.k}">${s.e} ${s.t} (${items.filter(p=>p.section===s.k).length})</button>`).join('');
+  const q=$('q').value.trim().toLowerCase(),S=SECTIONS.find(s=>s.k===tab);
+  const l=items.filter(p=>p.section===tab&&(!q||((p.name||'')+(p.code||'')+(p.seller_name||'')).toLowerCase().includes(q)));
+  $('liste').innerHTML=l.length?l.map(p=>{
+    const img=p.photo||p.image_url,ep=p.status&&p.status!=='En stock';
+    return `<div class="it${ep?' ep':''}">${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=noimg>${S.e}</div>'">`:`<div class="noimg">${S.e}</div>`}
+    <div class="in"><b>${esc(p.name)}${ep?'<span class="tag">'+esc(p.status)+'</span>':''}</b><div class="pr">${fmt(p.sell_price||p.price)}</div>
+    <small>${esc(p.code||'')}${p.seller_name?' · '+esc(p.seller_name):''}</small>
+    <div class="act"><button class="b-st" data-st="${p.id}">${ep?'Remettre en stock':'Marquer épuisé'}</button><button class="b-del" data-del="${p.id}">Supprimer</button></div></div></div>`}).join('')
+    :'<div class="empty">'+S.e+'<br>Aucun produit ici.<br>Touche « + Ajouter ».</div>';
+}
+$('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(b){tab=b.dataset.t;afficher()}};
+$('q').oninput=afficher;
+$('liste').onclick=async e=>{
+  const d=e.target.closest('[data-del]'),s=e.target.closest('[data-st]');
+  try{
+    if(d){const p=items.find(x=>x.id===d.dataset.del);if(!p||!confirm('Supprimer « '+p.name+' » ?\nCette action est définitive.'))return;
+      await api('/rest/v1/products?id=eq.'+encodeURIComponent(p.id),{method:'DELETE',headers:H({Prefer:'return=minimal'})});
+      items=items.filter(x=>x.id!==p.id);afficher();toast('🗑️ Produit supprimé')}
+    if(s){const p=items.find(x=>x.id===s.dataset.st);if(!p)return;const ns=(p.status&&p.status!=='En stock')?'En stock':'Épuisé';
+      await api('/rest/v1/products?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',headers:H({'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify({status:ns})});
+      p.status=ns;afficher();toast(ns==='En stock'?'✅ Remis en stock':'Marqué épuisé (caché aux clients)')}
+  }catch(err){toast('⚠️ '+err.message,4000);if(/connecte-toi/i.test(err.message))ouvrirLogin()}
+};
+
+// ===== Ajout =====
+let photoBlob=null;
+function ouvrirForm(){
+  $('fsec').innerHTML=SECTIONS.map(s=>`<option value="${s.k}">${s.e} ${s.t}</option>`).join('');$('fsec').value=tab;majLabel();
+  ['fnom','fvente','fachat','fdesc','fven','ftel','furl','fvid'].forEach(i=>$(i).value='');photoBlob=null;$('pv').hidden=true;$('fmsg').textContent='';$('ffile').value='';
+  $('fs').hidden=false;
+}
+function majLabel(){const im=$('fsec').value==='immobilier';$('fvid').style.display=$('fvidl').style.display=im?'':'none';$('fvl').textContent=(SECTIONS.find(s=>s.k===$('fsec').value)||SECTIONS[0]).v}
+$('fsec').onchange=majLabel;
+$('add').onclick=ouvrirForm;$('fno').onclick=()=>$('fs').hidden=true;
+// photo réduite avant envoi (max 900 px) pour économiser les données
+$('ffile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const img=new Image(),u=URL.createObjectURL(f);
+  img.onload=()=>{const r=Math.min(1,900/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);c.toBlob(b=>{photoBlob=b;$('pv').src=URL.createObjectURL(b);$('pv').hidden=false},'image/jpeg',.8);URL.revokeObjectURL(u)};
+  img.onerror=()=>{$('fmsg').textContent="Photo illisible, essaie une autre."};img.src=u;
+};
+$('fok').onclick=async()=>{
+  const nom=$('fnom').value.trim(),vente=parseFloat($('fvente').value),sec=$('fsec').value,S=SECTIONS.find(s=>s.k===sec);
+  if(!nom){$('fmsg').textContent='Écris le nom du produit.';return}
+  if(!(vente>=0)||$('fvente').value===''){$('fmsg').textContent='Écris le prix de vente.';return}
+  $('fok').disabled=true;$('fmsg').textContent='Enregistrement...';
+  try{
+    let photo=$('furl').value.trim();
+    if(photoBlob){
+      if(!tok)throw new Error('Connecte-toi en administrateur pour envoyer une photo');
+      const r=await fetch(CF_UPLOAD_URL,{method:'POST',headers:{'Content-Type':'image/jpeg',Authorization:'Bearer '+tok},body:photoBlob});
+      if(!r.ok)throw new Error("Envoi de la photo vers Cloudflare impossible ("+r.status+")");
+      const j=await r.json();photo=j.url||'';if(!photo)throw new Error("Cloudflare n'a pas renvoyé le lien de la photo");
+    }
+    const n=items.filter(p=>(p.code||'').startsWith(S.pre+'-')).map(p=>parseInt(p.code.split('-').pop(),10)||0);
+    const code=S.pre+'-'+String((n.length?Math.max(...n):0)+1).padStart(3,'0');
+    const row={name:nom,description:$('fdesc').value.trim()||null,price:vente,sell_price:vente,buy_price:parseFloat($('fachat').value)||0,
+      photo:photo||'',image_url:photo||null,video_url:$('fvid').value.trim()||null,seller_name:$('fven').value.trim(),seller_phone:$('ftel').value.trim(),
+      code,section:sec,region:'agadez',status:'En stock',quantite:1,stock:100};
+    const res=await api('/rest/v1/products',{method:'POST',headers:H({'Content-Type':'application/json',Prefer:'return=representation'}),body:JSON.stringify(row)});
+    items.unshift((res&&res[0])||row);tab=sec;afficher();$('fs').hidden=true;toast('✅ '+code+' ajouté');
+  }catch(err){$('fmsg').textContent='⚠️ '+err.message;if(/connecte-toi/i.test(err.message)){$('fs').hidden=true;ouvrirLogin()}}
+  $('fok').disabled=false;
+};
+
+// ===== Connexion administrateur =====
+function ouvrirLogin(){$('lmsg').textContent='';$('ls').hidden=false}
+$('lg').onclick=()=>{
+  if(tok){tok=null;mail='';try{localStorage.removeItem('oda_admin')}catch(e){}head();charger();toast('Déconnecté');return}
+  ouvrirLogin();
+};
+$('lno').onclick=()=>$('ls').hidden=true;
+$('lok').onclick=async()=>{
+  $('lok').disabled=true;$('lmsg').textContent='Connexion...';
+  try{
+    const r=await api('/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:ANON,'Content-Type':'application/json'},body:JSON.stringify({email:$('lmail').value.trim(),password:$('lpass').value})});
+    tok=r.access_token;mail=(r.user&&r.user.email)||$('lmail').value.trim();
+    try{localStorage.setItem('oda_admin',JSON.stringify({tok,mail,exp:Date.now()+(r.expires_in||3600)*1000-60000}))}catch(e){}
+    $('ls').hidden=true;$('lpass').value='';head();charger();toast('✅ Connecté');
+  }catch(err){$('lmsg').textContent=(err.message.includes('refusé')||/invalid/i.test(err.message))?'E-mail ou mot de passe incorrect.':'⚠️ '+err.message}
+  $('lok').disabled=false;
+};
+if(!CF_UPLOAD_URL){$('phbox').style.display='none';$('furll').textContent='Lien de la photo (hébergée sur Cloudflare)'}
+head();charger();
+</script>
+</body>
+</html>
